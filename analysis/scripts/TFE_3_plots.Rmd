@@ -93,12 +93,6 @@ for (i in num.var) cat("[",i,"] ", names(imp_data)[i], "\n", sep="")
 ```
 
 
-## Define grouping variable
-```{r}
-#imp_data[["Sample.Spot"]] <- paste(imp_data[["Sample"]], imp_data[["Location"]], imp_data[["Spot"]], sep="_")
-```
-
-
 ---
 
 # Plot each of the selected numeric variable (facet plot = 1 plot for flint, 1 plot for lydite)
