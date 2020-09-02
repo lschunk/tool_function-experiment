@@ -1,0 +1,152 @@
+---
+title: "Plots - tool function experiment"
+author: "Lisa Schunk"
+date: "`r Sys.time()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    theme: cerulean
+    highlight: pygments
+    number_sections: true
+editor_options: 
+  chunk_output_type: console
+---
+
+---
+
+Rbin-file used for this script: **`r paste0("~/", params$data)`**
+
+
+```{r Knitr Options, include=FALSE}
+	knitr::opts_chunk$set(comment=NA, message=FALSE, indent="", error=TRUE)
+```
+
+---
+
+
+# Goal of the script
+This script plots all variables to see which ones should be used for further analysis.  
+Scatterplot of each variable will be plotted.   
+
+
+
+```{r}
+dir_in <- "analysis/derived_data/"
+dir_out <- "analysis/plots"
+```
+
+Raw data must be located in `r paste0("~/", dir_in)`.  
+Formatted data will be saved in `r paste0("~/", dir_out)`.
+
+The knit directory for this script is the project directory.
+---
+
+
+# Load packages
+```{r}
+library(R.utils)
+library(ggplot2)
+library(tools)
+library(tidyverse)
+```
+
+
+---
+
+# Get name, path and information of the file 
+```{r}
+data_file <- list.files(dir_in, pattern = "\\.xlsx$", full.names = TRUE)
+md5_in <- md5sum(data_file)
+info_in <- data.frame(file = basename(names(md5_in)), checksum = md5_in, row.names = NULL)
+```
+
+
+The checksum (MD5 hashes) of the imported file is:  
+```{r, echo = FALSE}
+info_in
+```
+
+
+# Load data into R object
+```{r}
+imp_data <- loadObject(paste0(dir_in, "TFE_use-wear.Rbin"))
+```
+
+The imported file is: "`r paste0("~/", params$data)`"  
+
+
+
+---
+
+# Prepare variables
+## Define numeric variables
+```{r}
+num.var <- 24:length(imp_data)
+```
+
+The following variables will be used: 
+
+```{r, echo=FALSE}
+for (i in num.var) cat("[",i,"] ", names(imp_data)[i], "\n", sep="")
+```
+
+
+## Define grouping variable
+```{r}
+#imp_data[["Sample.Spot"]] <- paste(imp_data[["Sample"]], imp_data[["Location"]], imp_data[["Spot"]], sep="_")
+```
+
+
+---
+
+# Plot each of the selected numeric variable (facet plot = 1 plot for flint, 1 plot for lydite)
+```{r}
+for (i in num.var){
+  #plot
+	p <- ggplot(data=imp_data, aes_string(x="Task", y=names(imp_data)[i], colour="Edge.angle")) + 
+	     geom_jitter(size = 3,  position = position_jitterdodge(jitter.width = 0.5, seed = 123)) + # avoids overplotting
+	     theme_classic() + 
+	     labs(colour = gsub("\\.", " ", "Edge.angle")) + # removes the "." betwenn "Edge.angle" in the ledgend 
+       facet_wrap(~Raw.material) # combines the flint and the lydite plot into one 
+	print(p)
+
+
+	#save to PDF
+	file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "_plot_", names(imp_data)[i], ".pdf")
+	ggsave(filename = file_out, plot = p, path = dir_out, device = "pdf")
+}
+```
+The files will be saved as "`r paste0("~/", dir_out, ".[ext]")`".
+
+---
+
+
+# Show plot files information
+```{r}
+info_out <- list.files(path = dir_out, pattern = "\\.pdf$", full.names = TRUE) %>% 
+            md5sum()
+```
+
+
+The checksum (MD5 hashes) of the exported files are:  
+```{r, echo = FALSE}
+info_out
+```
+
+
+---
+
+# sessionInfo() and RStudio version
+
+```{r}
+sessionInfo()
+```
+
+RStudio version `r readLines("analysis/scripts/RStudioVersion.txt", n = 1)`.
+
+
+---
+
+END OF SCRIPT
