@@ -5,18 +5,19 @@ date: "`r Sys.time()`"
 output:
   html_document:
     toc: true
-    toc_depth: 2
+    toc_depth: 3
     toc_float: true
     theme: cerulean
     highlight: pygments
     number_sections: true
-editor_options: 
-  chunk_output_type: console
+  github_document: 
+    toc: true
+    toc_depth: 3
+    html_preview: false
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_format = "all", knit_root_dir = rprojroot::find_rstudio_root_file()) })
 ---
 
----
-
-Rbin-file used for this script: **`r paste0("~/", params$data)`**
 
 
 ```{r Knitr Options, include=FALSE}
@@ -57,7 +58,7 @@ library(tidyverse)
 
 # Get name, path and information of the file 
 ```{r}
-data_file <- list.files(dir_in, pattern = "\\.xlsx$", full.names = TRUE)
+data_file <- list.files(dir_in, pattern = "\\.Rbin$", full.names = TRUE)
 md5_in <- md5sum(data_file)
 info_in <- data.frame(file = basename(names(md5_in)), checksum = md5_in, row.names = NULL)
 ```
@@ -71,10 +72,10 @@ info_in
 
 # Load data into R object
 ```{r}
-imp_data <- loadObject(paste0(dir_in, "TFE_use-wear.Rbin"))
+imp_data <- loadObject(data_file)
 ```
 
-The imported file is: "`r paste0("~/", params$data)`"  
+The imported file is: "`r paste0("~/", data_file)`"  
 
 
 
@@ -95,20 +96,28 @@ for (i in num.var) cat("[",i,"] ", names(imp_data)[i], "\n", sep="")
 
 ---
 
-# Plot each of the selected numeric variable (facet plot = 1 plot for flint, 1 plot for lydite)
+# Plot each of the selected numeric variable 
+## (facet plot = 1 plot for flint, 1 plot for lydite)
 ```{r}
 for (i in num.var){
   #plot
+  range_var <- range(imp_data[[i]]) # gets the min/max range of the data set 
+  
 	p <- ggplot(data=imp_data, aes_string(x="Task", y=names(imp_data)[i], colour="Edge.angle")) + 
-	     geom_jitter(size = 3,  position = position_jitterdodge(jitter.width = 0.5, seed = 123)) + # avoids overplotting
+	     # avoids overplotting
+	     geom_jitter(size = 3,  position = position_jitter(width = 0.4, seed = 1)) + 
+	     coord_cartesian(ylim = range_var) + 
 	     theme_classic() + 
-	     labs(colour = gsub("\\.", " ", "Edge.angle")) + # removes the "." betwenn "Edge.angle" in the ledgend 
-       facet_wrap(~Raw.material) # combines the flint and the lydite plot into one 
+	     # removes the "." betwenn "Edge.angle" in the ledgend 
+	     labs(colour = gsub("\\.", " ", "Edge.angle")) + 
+       # combines the flint and the lydite plot into one    
+	     facet_wrap(~Raw.material) 
 	print(p)
 
 
 	#save to PDF
-	file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "_plot_", names(imp_data)[i], ".pdf")
+	file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "_plot_", 
+	                   names(imp_data)[i], ".pdf")
 	ggsave(filename = file_out, plot = p, path = dir_out, device = "pdf")
 }
 ```

@@ -5,16 +5,18 @@ date: "`r Sys.time()`"
 output:
   html_document:
     toc: true
-    toc_depth: 2
+    toc_depth: 3
     toc_float: true
     theme: cerulean
     highlight: pygments
     number_sections: true
-editor_options: 
-  chunk_output_type: console
+  github_document: 
+    toc: true
+    toc_depth: 3
+    html_preview: false
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_format = "all", knit_root_dir = rprojroot::find_rstudio_root_file()) })
 ---
-
-Rbin-file used for this script: **`r paste0("~/", params$data)`**
 
 
 ```{r Knitr Options, include=FALSE}
@@ -49,8 +51,8 @@ dir_out <- "analysis/summary_stats/"
 
 Raw data must be located in `r paste0("~/", dir_in)`.  
 Formatted data will be saved in `r paste0("~/", dir_out)`.
-
 The knit directory for this script is the project directory.
+
 ---
 
 
@@ -84,7 +86,7 @@ info_in
 imp_data <- loadObject(paste0(dir_in, "TFE_use-wear.Rbin"))
 ```
 
-The imported file is: "`r paste0("~/", params$data)`"  
+The imported file is: "`r paste0("~/", data_file)`"  
 
 ---
 
@@ -123,20 +125,26 @@ nminmaxmeanmedsd <- function(x){
 ##  Compute the summary statistics in groups
 ### Spots
 ```{r}
-spot <- summaryBy(.~Sample+Location+Area, data=imp_data[c("Sample","Location","Area" ,names(imp_data)[num.var])], FUN=nminmaxmeanmedsd)
+spot <- summaryBy(.~Sample+Location+Area, 
+                  data=imp_data[c("Sample","Location","Area" ,names(imp_data)[num.var])], 
+                  FUN=nminmaxmeanmedsd)
 str(spot)
 ```
 
 
 ### Task and edge angel 
 ```{r}
-task <- summaryBy(.~Sample+Task+Edge.angle, data=imp_data[c("Sample", "Task", "Edge.angle",names(imp_data)[num.var])], FUN=nminmaxmeanmedsd)
+task <- summaryBy(.~Sample+Task+Edge.angle, 
+                  data=imp_data[c("Sample", "Task", "Edge.angle",names(imp_data)[num.var])], 
+                  FUN=nminmaxmeanmedsd)
 str(task)
 ```
 
 ### Raw material
 ```{r}
-raw_material <- summaryBy(.~Raw.material+Task+Edge.angle,  data=imp_data[c("Raw.material","Task","Edge.angle" ,names(imp_data)[num.var])], FUN=nminmaxmeanmedsd)
+raw_material <- summaryBy(.~Raw.material+Task+Edge.angle, 
+                          data=imp_data[c("Raw.material","Task","Edge.angle",
+                                          names(imp_data)[num.var])], FUN=nminmaxmeanmedsd)
 str(raw_material)
 ```
 
@@ -152,15 +160,15 @@ The file will be saved as "`r paste0("~/", dir_out, ".[ext]")`".
 
 ## Write to XLSX
 ```{r}
-write.xlsx(list(spot = spot, task = task, raw_material = raw_material), file = paste0(dir_out, file_out, ".xlsx"))
-
-
+write.xlsx(list(spot = spot, task = task, raw_material = raw_material), 
+           file = paste0(dir_out, file_out, ".xlsx"))
 ```
 
 
 ## Save R object
 ```{r}
-saveObject(list(spot=spot, task = task, raw_material = raw_material), file = paste0(dir_out, file_out, ".Rbin"))
+saveObject(list(spot=spot, task = task, raw_material = raw_material), 
+           file = paste0(dir_out, file_out, ".Rbin"))
 ```
 
 

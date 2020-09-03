@@ -5,13 +5,17 @@ date: "`r Sys.time()`"
 output:
   html_document:
     toc: true
-    toc_depth: 2
+    toc_depth: 3
     toc_float: true
     theme: cerulean
     highlight: pygments
     number_sections: true
-editor_options: 
-  chunk_output_type: console
+  github_document: 
+    toc: true
+    toc_depth: 3
+    html_preview: false
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_format = "all", knit_root_dir = rprojroot::find_rstudio_root_file()) })
 ---
 
 
@@ -124,9 +128,12 @@ colnames(data_keep)[SSFA] <- gsub("^([A-Za-z0-9]+\\.)+", "", colnames(data_keep)
 ```{r}
 # takes the units which were part of the headers and separates them; creates a data frame
 var_num <- c(ID, ISO, furrow, diriso, SSFA)
-units_var <- unlist(imp_data[3, data_keep_col])[var_num] #extracts 'unit' line for considered columns
-names(units_var) <- head_data_keep[var_num] #gets names associated to the units
-units_var_table <- data.frame(variable = names(units_var), unit = units_var) #puts all of it into a data.frame
+# extracts 'unit' line for considered columns
+units_var <- unlist(imp_data[3, data_keep_col])[var_num] 
+# gets names associated to the units
+names(units_var) <- head_data_keep[var_num] 
+# puts all of it into a data.frame
+units_var_table <- data.frame(variable = names(units_var), unit = units_var) 
 ```
 
 
@@ -146,7 +153,9 @@ split_loc <- do.call(rbind, strsplit(split_name[, 3], "-"))
 
 # splits the ID in the separat information 
 data_final <- data.frame(split_name[, -3], split_loc, data_keep[-3], stringsAsFactors = FALSE)
-colnames(data_final)[1:9] <- c("Sample", "Cycle","Objective", "Location", "Area", "Spot", "Analysis.date", "Analysis.time", "Acquisition.date.time")
+colnames(data_final)[1:9] <- c("Sample", "Cycle","Objective", 
+                               "Location", "Area", "Spot", "Analysis.date", "Analysis.time", 
+                               "Acquisition.date.time")
 ```
 
 
@@ -230,7 +239,8 @@ The files will be saved as "`r paste0("~/", file_out, ".[ext]")`".
 
 ## Write to XLSX
 ```{r}
-write.xlsx(list(data = data_final, units = units_var_table), file = paste0(dir_out, file_out, ".xlsx"))
+write.xlsx(list(data = data_final, units = units_var_table), 
+           file = paste0(dir_out, file_out, ".xlsx"))
 ```
 
 
