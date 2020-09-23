@@ -108,8 +108,10 @@ for (i in num.var){
 	     geom_jitter(size = 3,  position = position_jitter(width = 0.4, seed = 1)) + 
 	     coord_cartesian(ylim = range_var) + 
 	     theme_classic() + 
-	     # removes the "." betwenn "Edge.angle" in the ledgend 
+	     # removes the "." between "Edge.angle" in the legend 
 	     labs(colour = gsub("\\.", " ", "Edge.angle")) + 
+	     # removes the "." between the variable names
+	     labs(y = gsub("\\.", " ", names(imp_data)[i])) + 
        # combines the flint and the lydite plot into one    
 	     facet_wrap(~Raw.material) 
 	print(p)
@@ -120,6 +122,7 @@ for (i in num.var){
 	                   names(imp_data)[i], ".pdf")
 	ggsave(filename = file_out, plot = p, path = dir_out, device = "pdf")
 }
+
 ```
 The files will be saved as "`r paste0("~/", dir_out, ".[ext]")`".
 

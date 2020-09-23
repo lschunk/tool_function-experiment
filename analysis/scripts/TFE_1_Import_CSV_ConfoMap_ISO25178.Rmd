@@ -30,9 +30,9 @@ knitr::opts_chunk$set(comment = NA, message = FALSE, indent = "", error = TRUE)
 This script formats the output of the resulting CSV-file from applying a template computing ISO25178 parameters in ConfoMap.
 The script will:
 
-1. Read in the original CSV-file (step #3)  
-2. Format the data (step #4)  
-3. Write an XLSX-file and save an R object ready for further analysis in R (step #5)
+1. Read in the original CSV-file
+2. Format the data   
+3. Write an XLSX-file and save an R object ready for further analysis in R 
 
 ```{r}
 dir_in <- "analysis/raw_data"
