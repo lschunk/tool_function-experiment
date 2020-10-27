@@ -51,6 +51,8 @@ library(R.utils)
 library(ggplot2)
 library(tools)
 library(tidyverse)
+library(ggfortify)
+library(wesanderson)
 ```
 
 
@@ -124,8 +126,59 @@ for (i in num.var){
 }
 
 ```
-The files will be saved as "`r paste0("~/", dir_out, ".[ext]")`".
 
+
+## Principal component analysis 
+```{r}
+imp_data.pca <- prcomp(imp_data[24:30], scale. = TRUE) 
+
+imp_data.pca$x
+pca <- cbind(imp_data[, 1:13], imp_data.pca$x)
+
+# Using ggfortigy
+a<- autoplot(imp_data.pca, data = pca, colour = "Edge.angle",
+         label = TRUE, label.size = 2,
+         loadings = TRUE, loadings.label = TRUE, loadings.label.size  = 3) 
+
+print(a)
+
+# saves the plot
+file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "TFE_factor_analysis", ".pdf")
+ggsave(filename = file_out, plot = a, path = dir_out, device = "pdf")
+  
+
+# using ggplot
+# PCA use-wear type
+b <- ggplot(pca, aes(PC1, PC2, fill = Edge.angle)) +
+     stat_ellipse(geom = "polygon", col = "black", alpha = 0.5) +
+     scale_fill_manual(values = wes_palette(n = 2, name = "Royal1")) + 
+     geom_point(shape = 21, col = "black") +
+     labs(fill = "Edge angle") +
+     theme_classic()
+
+print(b)
+
+# saves the plot
+file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "TFE_PCA_Edge_angle", ".pdf")
+ggsave(filename = file_out, plot = b, path = dir_out, device = "pdf")
+
+# PCA tool type 
+c <- ggplot(pca, aes(PC1, PC2,fill = Task)) +
+          stat_ellipse(geom = "polygon", col = "black", alpha = 0.5) +
+          scale_fill_manual(values = wes_palette(n = 2, name = "Darjeeling2")) +
+          geom_point(shape = 21, col = "black") +
+          labs(fill = "Task") +
+          theme_classic()
+
+print(c)
+
+# saves the plot
+file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "TFE_PCA_Task", ".pdf")
+ggsave(filename = file_out, plot = c, path = dir_out, device = "pdf")
+
+
+```
+The files will be saved as "`r paste0("~/", dir_out, ".[ext]")`".
 ---
 
 
