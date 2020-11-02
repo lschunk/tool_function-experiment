@@ -130,52 +130,79 @@ for (i in num.var){
 
 ## Principal component analysis 
 ```{r}
-imp_data.pca <- prcomp(imp_data[24:30], scale. = TRUE) 
+# removes the rows with missing values 
+data_pca <- na.omit(imp_data) 
 
-imp_data.pca$x
-pca <- cbind(imp_data[, 1:13], imp_data.pca$x)
+imp_data.pca <- prcomp(data_pca[, c(24:25, 42, 47, 51, 54, 56)], scale. = TRUE) 
 
-# Using ggfortigy
-a<- autoplot(imp_data.pca, data = pca, colour = "Edge.angle",
-         label = TRUE, label.size = 2,
-         loadings = TRUE, loadings.label = TRUE, loadings.label.size  = 3) 
 
+#FantasticFox1 = c("#DD8D29", "#E2D200", "#46ACC8", "#E58601", "#B40F20")
+custom.col4 <- data.frame(type = levels(data_pca$Task), col = c("#E58601", "#B40F20")) 
+data_pca$col <- custom.col4[data_pca$Task, "col"]
+
+# plots the task - PCA with ellipse 
+# Using ggfortify
+a<- autoplot(imp_data.pca, data = data_pca, colour = "Task", size = 2,
+             loadings = TRUE, loadings.colour = "black", loadings.label = TRUE, loadings.label.colour = "black", 
+             loadings.label.size  = 4, loadings.label.hjust = 1, loadings.label.vjust = 1,  
+             frame = TRUE, frame.type = "norm", frame.colour = "Task", frame.alpha = 0) + 
+             theme_classic() +
+             scale_colour_manual(values = custom.col4$col)
+         
 print(a)
 
 # saves the plot
-file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "TFE_factor_analysis", ".pdf")
+file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "TFE_PCA_Task_1", ".pdf")
 ggsave(filename = file_out, plot = a, path = dir_out, device = "pdf")
-  
 
-# using ggplot
-# PCA use-wear type
-b <- ggplot(pca, aes(PC1, PC2, fill = Edge.angle)) +
-     stat_ellipse(geom = "polygon", col = "black", alpha = 0.5) +
-     scale_fill_manual(values = wes_palette(n = 2, name = "Royal1")) + 
-     geom_point(shape = 21, col = "black") +
-     labs(fill = "Edge angle") +
-     theme_classic()
 
+# plots the task - PCA with convex hull
+b<- autoplot(imp_data.pca, data = data_pca, colour = "Task", size = 2,
+             loadings = TRUE, loadings.colour = "black", loadings.label = TRUE, loadings.label.colour = "black", 
+             loadings.label.size  = 4, loadings.label.hjust = 1, loadings.label.vjust = 1,  
+             frame = TRUE, frame.type = "convex", frame.colour = "Task", frame.alpha = 0) + 
+             theme_classic() +
+             scale_colour_manual(values = custom.col4$col)
+         
 print(b)
 
 # saves the plot
-file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "TFE_PCA_Edge_angle", ".pdf")
+file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "TFE_PCA_Task_2", ".pdf")
 ggsave(filename = file_out, plot = b, path = dir_out, device = "pdf")
 
-# PCA tool type 
-c <- ggplot(pca, aes(PC1, PC2,fill = Task)) +
-          stat_ellipse(geom = "polygon", col = "black", alpha = 0.5) +
-          scale_fill_manual(values = wes_palette(n = 2, name = "Darjeeling2")) +
-          geom_point(shape = 21, col = "black") +
-          labs(fill = "Task") +
-          theme_classic()
 
+# Chevalier1 = c("#446455", "#FDD262", "#D3DDDC", "#C7B19C")
+custom.col5 <- data.frame(type = levels(data_pca$Edge.angle), col = c("#446455", "#FDD262")) 
+data_pca$col <- custom.col5[data_pca$Edge.angle, "col"]
+
+# plots the edge angle  - PCA with ellipse 
+c<- autoplot(imp_data.pca, data = data_pca, colour = "Edge.angle", size = 2,
+             loadings = TRUE, loadings.colour = "black", loadings.label = TRUE, loadings.label.colour = "black", 
+             loadings.label.size  = 4, loadings.label.hjust = 1, loadings.label.vjust = 1,  
+             frame = TRUE, frame.type = "norm", frame.colour = "Edge.angle", frame.alpha = 0) + 
+             theme_classic() +
+             scale_colour_manual(values = custom.col5$col)
+         
 print(c)
 
 # saves the plot
-file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "TFE_PCA_Task", ".pdf")
+file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "TFE_PCA_angle_1", ".pdf")
 ggsave(filename = file_out, plot = c, path = dir_out, device = "pdf")
 
+
+# plots the edge angle  - PCA with convex hull 
+d<- autoplot(imp_data.pca, data = data_pca, colour = "Edge.angle", size = 2,
+             loadings = TRUE, loadings.colour = "black", loadings.label = TRUE, loadings.label.colour = "black", 
+             loadings.label.size  = 4, loadings.label.hjust = 1, loadings.label.vjust = 1,  
+             frame = TRUE, frame.type = "convex", frame.colour = "Edge.angle", frame.alpha = 0) + 
+             theme_classic() +
+             scale_colour_manual(values = custom.col5$col)
+         
+print(d)
+
+# saves the plot
+file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "TFE_PCA_angle_2", ".pdf")
+ggsave(filename = file_out, plot = d, path = dir_out, device = "pdf")
 
 ```
 The files will be saved as "`r paste0("~/", dir_out, ".[ext]")`".
