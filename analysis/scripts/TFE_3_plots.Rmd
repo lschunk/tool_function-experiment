@@ -171,8 +171,8 @@ file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "TFE_PCA_Task_2", ".pd
 ggsave(filename = file_out, plot = b, path = dir_out, device = "pdf")
 
 
-# Chevalier1 = c("#446455", "#FDD262", "#D3DDDC", "#C7B19C")
-custom.col5 <- data.frame(type = levels(data_pca$Edge.angle), col = c("#446455", "#FDD262")) 
+# BottleRocket2 = c("#FAD510", "#CB2314", "#273046", "#354823", "#1E1E1E")
+custom.col5 <- data.frame(type = levels(data_pca$Edge.angle), col = c("#273046", "#FAD510")) 
 data_pca$col <- custom.col5[data_pca$Edge.angle, "col"]
 
 # plots the edge angle  - PCA with ellipse 
