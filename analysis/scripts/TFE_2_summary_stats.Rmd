@@ -1,26 +1,14 @@
 ---
-title: "Summary statistics - tool function experiment" 
+title: "Summary statistics - tool function experiment"
 author: "Lisa Schunk"
 date: "`r Sys.time()`"
-output:
-  html_document:
-    toc: true
-    toc_depth: 3
-    toc_float: true
-    theme: cerulean
-    highlight: pygments
-    number_sections: true
-  github_document: 
-    toc: true
-    toc_depth: 3
-    html_preview: false
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_format = "all", knit_root_dir = rprojroot::find_rstudio_root_file()) })
+output: word_document
 ---
 
 
 ```{r Knitr Options, include=FALSE}
 	knitr::opts_chunk$set(comment=NA, message=FALSE, indent="", error=TRUE)
+
 ```
 
 ---
@@ -32,7 +20,7 @@ The groups are based on:
 
 * Raw material 
 * Spots (replicas) 
-* Task + edge anlge
+* Task + edge angle
 
 
 It computes the following statistics:  
@@ -47,6 +35,7 @@ It computes the following statistics:
 ```{r}
 dir_in <- "analysis/derived_data/"
 dir_out <- "analysis/summary_stats/"
+
 ```
 
 Raw data must be located in `r paste0("~/", dir_in)`.  
@@ -62,6 +51,7 @@ library(openxlsx)
 library(R.utils)
 library(tools)
 library(doBy)
+
 ```
 
 
@@ -72,18 +62,21 @@ library(doBy)
 data_file <- list.files(dir_in, pattern = "\\.xlsx$", full.names = TRUE)
 md5_in <- md5sum(data_file)
 info_in <- data.frame(file = basename(names(md5_in)), checksum = md5_in, row.names = NULL)
+
 ```
 
 
 The checksum (MD5 hashes) of the imported file is  
 ```{r, echo = FALSE}
 info_in
+
 ```
 
 
 # Load data into R object
 ```{r}
 imp_data <- loadObject(paste0(dir_in, "TFE_use-wear.Rbin"))
+
 ```
 
 The imported file is: "`r paste0("~/", data_file)`"  
@@ -94,12 +87,14 @@ The imported file is: "`r paste0("~/", data_file)`"
 # 4. Define numeric variables
 ```{r}
 num.var <- 24:length(imp_data)
+
 ```
 
 The following variables will be used: 
 
 ```{r, echo=FALSE}
 for (i in num.var) cat("[",i,"] ", names(imp_data)[i], "\n", sep="")
+
 ```
 
 ---
@@ -120,32 +115,36 @@ nminmaxmeanmedsd <- function(x){
  	names(out) <- c("n", "min", "max", "mean", "median", "sd")
  	return(out)
 }
+
 ```
 
 ##  Compute the summary statistics in groups
 ### Spots
 ```{r}
-spot <- summaryBy(.~Sample+Location+Area, 
-                  data=imp_data[c("Sample","Location","Area" ,names(imp_data)[num.var])], 
-                  FUN=nminmaxmeanmedsd)
+spot <- summaryBy(.~ Sample + Location + Area, 
+                  data = imp_data[c("Sample","Location","Area" ,names(imp_data)[num.var])], 
+                   FUN = nminmaxmeanmedsd)
 str(spot)
+
 ```
 
 
 ### Task and edge angel 
 ```{r}
-task <- summaryBy(.~Sample+Task+Edge.angle, 
-                  data=imp_data[c("Sample", "Task", "Edge.angle",names(imp_data)[num.var])], 
-                  FUN=nminmaxmeanmedsd)
+task <- summaryBy(.~ Sample + Task + Edge.angle, 
+                  data = imp_data[c("Sample", "Task", "Edge.angle",     
+                  names(imp_data)[num.var])], FUN = nminmaxmeanmedsd)
 str(task)
+
 ```
 
 ### Raw material
 ```{r}
-raw_material <- summaryBy(.~Raw.material+Task+Edge.angle, 
-                          data=imp_data[c("Raw.material","Task","Edge.angle",
-                                          names(imp_data)[num.var])], FUN=nminmaxmeanmedsd)
+raw_material <- summaryBy(.~ Raw.material + Task + Edge.angle, 
+                         data=imp_data[c("Raw.material","Task","Edge.angle",
+                         names(imp_data)[num.var])], FUN = nminmaxmeanmedsd)
 str(raw_material)
+
 ```
 
 ---
@@ -154,6 +153,7 @@ str(raw_material)
 ## Format name of output file
 ```{r}
 file_out <- "TFE_stats"
+
 ```
 The file will be saved as "`r paste0("~/", dir_out, ".[ext]")`".
 
@@ -161,27 +161,16 @@ The file will be saved as "`r paste0("~/", dir_out, ".[ext]")`".
 ## Write to XLSX
 ```{r}
 write.xlsx(list(spot = spot, task = task, raw_material = raw_material), 
-           file = paste0(dir_out, file_out, ".xlsx"))
+                file = paste0(dir_out, file_out, ".xlsx")) 
+
 ```
 
 
 ## Save R object
 ```{r}
-saveObject(list(spot=spot, task = task, raw_material = raw_material), 
+saveObject(list(spot = spot, task = task, raw_material = raw_material), 
            file = paste0(dir_out, file_out, ".Rbin"))
-```
 
-
-## Show file information
-```{r}
-file_out <- c(paste0(dir_out, file_out, ".xlsx"), paste0(dir_out, file_out, ".Rbin"))
-md5_out <- md5sum(files_out)
-info_out <- data.frame(files = basename(names(md5_out)), checksum = md5_out, row.names = NULL)
-```
-
-The checksum (MD5 hashes) of the exported files are:  
-```{r, echo = FALSE}
-info_out
 ```
 
 

@@ -2,32 +2,20 @@
 title: "Import CSV from ConfoMap ISO25178 - tool function experiment"
 author: "Lisa Schunk"
 date: "`r Sys.time()`"
-output:
-  html_document:
-    toc: true
-    toc_depth: 3
-    toc_float: true
-    theme: cerulean
-    highlight: pygments
-    number_sections: true
-  github_document: 
-    toc: true
-    toc_depth: 3
-    html_preview: false
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_format = "all", knit_root_dir = rprojroot::find_rstudio_root_file()) })
+output: word_document
 ---
 
 
 ```{r Knitr Options, include=FALSE}
 knitr::opts_chunk$set(comment = NA, message = FALSE, indent = "", error = TRUE)
+
 ```
 
 ---
 
 
 # Goal of the script
-This script formats the output of the resulting CSV-file from applying a template computing ISO25178 parameters in ConfoMap.
+This script formats the output of the resulting CSV-file from applying a template computing ISO 25178 parameters in ConfoMap.
 The script will:
 
 1. Read in the original CSV-file
@@ -37,6 +25,7 @@ The script will:
 ```{r}
 dir_in <- "analysis/raw_data"
 dir_out <- "analysis/derived_data/"
+
 ```
 
 Raw data must be located in `r paste0("~/", dir_in)`.  
@@ -53,6 +42,7 @@ library(openxlsx)
 library(tools)
 library(R.utils)
 library(chron)
+
 ```
 
 
@@ -64,11 +54,13 @@ library(chron)
 data_file <- list.files(dir_in, pattern = "\\.csv$", full.names = TRUE)
 md5_in <- md5sum(data_file)
 info_in <- data.frame(file = basename(names(md5_in)), checksum = md5_in, row.names = NULL)
+
 ```
 
 The checksum (MD5 hashes) of the imported file are:  
 ```{r, echo = FALSE}
 info_in
+
 ```
 
 
@@ -77,9 +69,11 @@ info_in
 
 # Read in original CSV-file
 ```{r}
-imp_data <- read.csv(data_file, header = FALSE, stringsAsFactors = FALSE, na.strings = "*****")
+imp_data <- read.csv(data_file, header = FALSE, stringsAsFactors = FALSE, 
+                            na.strings = "*****")
 
 str(imp_data)
+
 ```
 
 
@@ -93,6 +87,7 @@ str(imp_data)
 data_keep_col <- c(1:2, 16:17, 20:22, 24:26, 29:32, 67:100)
 data_keep_rows <- which(imp_data[[1]] != "#")
 data_keep <- imp_data[data_keep_rows, data_keep_col]
+
 ```
 
 
@@ -101,26 +96,31 @@ data_keep <- imp_data[data_keep_rows, data_keep_col]
 head_data_keep <- unlist(imp_data[2, data_keep_col]) 
 colnames(data_keep) <- gsub("\\.+", "\\.", make.names(head_data_keep))
 colnames(data_keep) <- gsub("\\.$", "", colnames(data_keep)) 
+
 ```
 
 
 ## Identify results using frame numbers
 ```{r}
-# combines the results from the different analysis based on the column numbers (ID from MountainsMAp)
+# combines the results from the different analysis based on the column numbers 
+# (ID from MountainsMAp)
 frames <- as.numeric(unlist(imp_data[1, data_keep_col]))
 ID <- which(frames == 6)[-(1:2)]
 ISO <- which(frames == 17)
 furrow <- which(frames == 18)
 diriso <- which(frames %in% 19:20)
 SSFA <- which(frames %in% 21:22)
+
 ```
 
 
 ## Shorten the names for parameters
 ```{r}
 # keeps only the important information of the headers 
-colnames(data_keep)[ISO] <- sapply(strsplit(names(data_keep)[ISO], ".", fixed = TRUE), `[[`, 1)
+colnames(data_keep)[ISO] <- sapply(strsplit(names(data_keep)[ISO], ".", fixed = TRUE), 
+                            `[[`, 1)
 colnames(data_keep)[SSFA] <- gsub("^([A-Za-z0-9]+\\.)+", "", colnames(data_keep)[SSFA])
+
 ```
 
 
@@ -134,12 +134,14 @@ units_var <- unlist(imp_data[3, data_keep_col])[var_num]
 names(units_var) <- head_data_keep[var_num] 
 # puts all of it into a data.frame
 units_var_table <- data.frame(variable = names(units_var), unit = units_var) 
+
 ```
 
 
 ## Convert to numeric
 ```{r}
 for (i in var_num) data_keep[[i]] <- as.numeric(data_keep[[i]])
+
 ```
 
 
@@ -152,10 +154,12 @@ split_name <- do.call(rbind, strsplit(stud_name, "_"))[, 1:4]
 split_loc <- do.call(rbind, strsplit(split_name[, 3], "-"))
 
 # splits the ID in the separat information 
-data_final <- data.frame(split_name[, -3], split_loc, data_keep[-3], stringsAsFactors = FALSE)
-colnames(data_final)[1:9] <- c("Sample", "Cycle","Objective", 
-                               "Location", "Area", "Spot", "Analysis.date", "Analysis.time", 
+data_final <- data.frame(split_name[, -3], split_loc, data_keep[-3], 
+                         stringsAsFactors = FALSE)
+colnames(data_final)[1:9] <- c("Sample", "Cycle","Objective", "Location", "Area", "Spot",
+                               "Analysis.date", "Analysis.time", 
                                "Acquisition.date.time")
+
 ```
 
 
@@ -163,8 +167,10 @@ colnames(data_final)[1:9] <- c("Sample", "Cycle","Objective",
 ```{r}
 data_final[["Analysis.date"]] <- as.Date(data_final[["Analysis.date"]], format = "%d.%m.%Y")
 data_final[["Analysis.time"]] <- times(data_final[["Analysis.time"]])
+
 ```
-The column `data_final[["Acquisition.date.time"]]` includes several formats and is therefore left as `character` without convertion to `POSIXct`.
+The column `data_final[["Acquisition.date.time"]]` includes several formats and is therefore
+left as `character` without convertion to `POSIXct`.
 
 
 ## Add columns about site, contact material, the task and the edge angle
@@ -202,18 +208,21 @@ data_final[grep("LYDIT5-8", data_final[["Sample"]]), "Edge.angle"] <- "45°"
 data_final[grep("FLT8-9", data_final[["Sample"]]), "Edge.angle"] <- "35°"
 data_final[grep("LYDIT5-12", data_final[["Sample"]]), "Edge.angle"] <- "35°"
 data_final[["Edge.angle"]] <- factor(data_final[["Edge.angle"]])
+
 ```
 
 
 ## Ignore some columns and reorder columns
 ```{r}
 data_final <- data_final[c(1:2, 4:6, 3, 54:57, 7:9, 10:53)]
+
 ```
 
 
 ## Add units as comment()
 ```{r}
 comment(data_final) <- units_var
+
 ```
 
 Type `comment(data_final)` to check the units of the columns.
@@ -223,6 +232,7 @@ Type `comment(data_final)` to check the units of the columns.
 ```{r}
 str(data_final)
 head(data_final)
+
 ```
 
 
@@ -233,6 +243,7 @@ head(data_final)
 ## Format name of output file
 ```{r}
 file_out <- "TFE_use-wear"
+
 ```
 The files will be saved as "`r paste0("~/", file_out, ".[ext]")`".
 
@@ -240,26 +251,15 @@ The files will be saved as "`r paste0("~/", file_out, ".[ext]")`".
 ## Write to XLSX
 ```{r}
 write.xlsx(list(data = data_final, units = units_var_table), 
-           file = paste0(dir_out, file_out, ".xlsx"))
+                file = paste0(dir_out, file_out, ".xlsx"))
+
 ```
 
 
 ## Save R object
 ```{r}
 saveObject(data_final, file = paste0(dir_out, file_out, ".Rbin"))
-```
 
-
-## Show files information
-```{r}
-files_out <- c(paste0(dir_out, file_out, ".xlsx"), paste0(dir_out, file_out, ".Rbin"))
-md5_out <- md5sum(files_out)
-info_out <- data.frame(files = basename(names(md5_out)), checksum = md5_out, row.names = NULL)
-```
-
-The checksum (MD5 hashes) of the exported files are:  
-```{r, echo = FALSE}
-info_out
 ```
 
 
@@ -269,6 +269,7 @@ info_out
 
 ```{r}
 sessionInfo()
+
 ```
 
 RStudio version `r readLines("analysis/scripts/RStudioVersion.txt", n = 1)`.

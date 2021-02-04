@@ -3,25 +3,15 @@ title: "Plots - tool function experiment"
 author: "Lisa Schunk"
 date: "`r Sys.time()`"
 output:
+  word_document: default
   html_document:
-    toc: true
-    toc_depth: 3
-    toc_float: true
-    theme: cerulean
-    highlight: pygments
-    number_sections: true
-  github_document: 
-    toc: true
-    toc_depth: 3
-    html_preview: false
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_format = "all", knit_root_dir = rprojroot::find_rstudio_root_file()) })
+    df_print: paged
 ---
-
 
 
 ```{r Knitr Options, include=FALSE}
 	knitr::opts_chunk$set(comment=NA, message=FALSE, indent="", error=TRUE)
+
 ```
 
 ---
@@ -36,6 +26,7 @@ Scatterplot of each variable will be plotted.
 ```{r}
 dir_in <- "analysis/derived_data/"
 dir_out <- "analysis/plots"
+
 ```
 
 Raw data must be located in `r paste0("~/", dir_in)`.  
@@ -63,22 +54,24 @@ library(ggfortify)
 data_file <- list.files(dir_in, pattern = "\\.Rbin$", full.names = TRUE)
 md5_in <- md5sum(data_file)
 info_in <- data.frame(file = basename(names(md5_in)), checksum = md5_in, row.names = NULL)
+
 ```
 
 
 The checksum (MD5 hashes) of the imported file is:  
 ```{r, echo = FALSE}
 info_in
+
 ```
 
 
 # Load data into R object
 ```{r}
 imp_data <- loadObject(data_file)
+
 ```
 
 The imported file is: "`r paste0("~/", data_file)`"  
-
 
 
 ---
@@ -87,12 +80,14 @@ The imported file is: "`r paste0("~/", data_file)`"
 ## Define numeric variables
 ```{r}
 num.var <- 24:length(imp_data)
+
 ```
 
 The following variables will be used: 
 
 ```{r, echo=FALSE}
 for (i in num.var) cat("[",i,"] ", names(imp_data)[i], "\n", sep="")
+
 ```
 
 
@@ -101,16 +96,16 @@ for (i in num.var) cat("[",i,"] ", names(imp_data)[i], "\n", sep="")
 # Plot each of the selected numeric variable 
 ## (facet plot = 1 plot for flint, 1 plot for lydite)
 ```{r}
-#BottleRocket2 = c("#046C9A", "#FAD510")
-custom.col5 <- data.frame(type = levels(imp_data$Edge.angle), col = c("#046C9A", "#FAD510")) 
-imp_data$col <- custom.col5[imp_data$Edge.angle, "col"]
+# BottleRocket2 
+custom.col5 <- data.frame(type = levels(imp_data$Edge.angle), col = c("#046C9A", "#FAD510")) imp_data$col <- custom.col5[imp_data$Edge.angle, "col"]
 
 
 for (i in num.var){
   #plot
   range_var <- range(imp_data[[i]]) # gets the min/max range of the data set 
-  
-	p <- ggplot(data=imp_data, aes_string(x="Task", y=names(imp_data)[i], colour="Edge.angle")) + 
+
+	p <- ggplot(data=imp_data, aes_string(x = "Task", y=names(imp_data)[i],  
+	                                 colour = "Edge.angle")) + 
 	     # avoids overplotting
 	     geom_jitter(size = 3,  position = position_jitter(width = 0.4, seed = 1)) + 
 	     coord_cartesian(ylim = range_var) + 
@@ -134,28 +129,27 @@ for (i in num.var){
 ```
 
 
-## Principal component analysis (without)
+## Principal component analysis (without outliers)
 ```{r}
 # excludes the outliers 
 # adds the indices as row numbers 
 imp_data <- imp_data %>% mutate(id = row_number())
 imp_data2 <- imp_data[-c(2, 10), ]
 
-
 # removes the rows with missing values 
 data_pca <- na.omit(imp_data2) 
-
 imp_data.pca <- prcomp(data_pca[, c(24:25, 42, 47, 51, 54, 56)], scale. = TRUE) 
 
-
-#FantasticFox1 = c("#DD8D29", "#E2D200", "#46ACC8", "#E58601", "#B40F20")
+# FantasticFox1 
 custom.col4 <- data.frame(type = levels(data_pca$Task), col = c("#E58601", "#B40F20")) 
 data_pca$col <- custom.col4[data_pca$Task, "col"]
+
 
 # plots the task - PCA with convex hull 
 # Using ggfortify
 a<- autoplot(imp_data.pca, data = data_pca, colour = "Task", size = 2,
-             loadings = TRUE, loadings.colour = "black", loadings.label = TRUE, loadings.label.colour = "black", 
+             loadings = TRUE, loadings.colour = "black", loadings.label = TRUE,
+             loadings.label.colour = "black", 
              loadings.label.size  = 4, loadings.label.hjust = 1, loadings.label.vjust = 1,  
              frame = TRUE, frame.type = "convex", frame.colour = "Task", frame.alpha = 0) + 
              theme_classic() +
@@ -169,16 +163,17 @@ ggsave(filename = file_out, plot = a, path = dir_out, device = "pdf")
 
 
 
-# BottleRocket2 = c("#FAD510", "#046C9A", "#273046", "#354823", "#1E1E1E")
-custom.col5 <- data.frame(type = levels(data_pca$Edge.angle), col = c("#046C9A", "#FAD510")) 
-data_pca$col <- custom.col5[data_pca$Edge.angle, "col"]
+# BottleRocket2 
+custom.col5 <- data.frame(type = levels(data_pca$Edge.angle), col = c("#046C9A", "#FAD510")) data_pca$col <- custom.col5[data_pca$Edge.angle, "col"]
 
 
 # plots the edge angle  - PCA with convex hull 
 b<- autoplot(imp_data.pca, data = data_pca, colour = "Edge.angle", size = 2,
-             loadings = TRUE, loadings.colour = "black", loadings.label = TRUE, loadings.label.colour = "black", 
+             loadings = TRUE, loadings.colour = "black", loadings.label = TRUE,
+             loadings.label.colour = "black", 
              loadings.label.size  = 4, loadings.label.hjust = 1, loadings.label.vjust = 1,  
-             frame = TRUE, frame.type = "convex", frame.colour = "Edge.angle", frame.alpha = 0) + 
+             frame = TRUE, frame.type = "convex", frame.colour = "Edge.angle", 
+             frame.alpha = 0) + 
              theme_classic() +
              scale_colour_manual(values = custom.col5$col)
          
@@ -195,12 +190,13 @@ custom.col7 <- data.frame(type = levels(data_pca$Raw.material), col = c("#899DA4
 data_pca$col <- custom.col7[data_pca$Raw.material, "col"]
 
 
-
 # plots the raw material  - PCA with convex hull 
 c<- autoplot(imp_data.pca, data = data_pca, colour = "Raw.material", size = 2,
-             loadings = TRUE, loadings.colour = "black", loadings.label = TRUE, loadings.label.colour = "black", 
+             loadings = TRUE, loadings.colour = "black", loadings.label = TRUE,
+             loadings.label.colour = "black", 
              loadings.label.size  = 4, loadings.label.hjust = 1, loadings.label.vjust = 1,  
-             frame = TRUE, frame.type = "convex", frame.colour = "Raw.material", frame.alpha = 0) + 
+             frame = TRUE, frame.type = "convex", frame.colour = "Raw.material", 
+             frame.alpha = 0) + 
              theme_classic() +
              scale_colour_manual(values = custom.col7$col)
          
@@ -210,24 +206,8 @@ print(c)
 file_out <- paste0(file_path_sans_ext(info_in[["file"]]), "TFE_PCA_raw.material", ".pdf")
 ggsave(filename = file_out, plot = c, path = dir_out, device = "pdf")
 
-
 ```
 The files will be saved as "`r paste0("~/", dir_out, ".[ext]")`".
----
-
-
-# Show plot files information
-```{r}
-info_out <- list.files(path = dir_out, pattern = "\\.pdf$", full.names = TRUE) %>% 
-            md5sum()
-```
-
-
-The checksum (MD5 hashes) of the exported files are:  
-```{r, echo = FALSE}
-info_out
-```
-
 
 ---
 
@@ -235,6 +215,7 @@ info_out
 
 ```{r}
 sessionInfo()
+
 ```
 
 RStudio version `r readLines("analysis/scripts/RStudioVersion.txt", n = 1)`.
