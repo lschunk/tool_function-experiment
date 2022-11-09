@@ -2,7 +2,13 @@
 title: "Import CSV from ConfoMap ISO25178 - tool function experiment"
 author: "Lisa Schunk"
 date: "`r Sys.time()`"
-output: word_document
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
 ---
 
 
@@ -35,13 +41,10 @@ The knit directory for this script is the project directory.
 
 ---
 
-
 # Load packages
-```{r}
-library(openxlsx)
-library(tools)
-library(R.utils)
-library(chron)
+```{r Libraries}
+pack_to_load <- c("chron", "R.utils", "openxlsx", "tools")
+sapply(pack_to_load, library, character.only = TRUE, logical.return = TRUE)
 
 ```
 
@@ -54,12 +57,6 @@ library(chron)
 data_file <- list.files(dir_in, pattern = "\\.csv$", full.names = TRUE)
 md5_in <- md5sum(data_file)
 info_in <- data.frame(file = basename(names(md5_in)), checksum = md5_in, row.names = NULL)
-
-```
-
-The checksum (MD5 hashes) of the imported file are:  
-```{r, echo = FALSE}
-info_in
 
 ```
 
@@ -83,7 +80,7 @@ str(imp_data)
 # Format data
 ## Keep only interesting columns and rows
 ```{r}
-# keeps only the columns and rows of interest for the analysis 
+# keep only the columns and rows of interest for the analysis 
 data_keep_col <- c(1:2, 16:17, 20:22, 24:26, 29:32, 67:100)
 data_keep_rows <- which(imp_data[[1]] != "#")
 data_keep <- imp_data[data_keep_rows, data_keep_col]
@@ -102,7 +99,7 @@ colnames(data_keep) <- gsub("\\.$", "", colnames(data_keep))
 
 ## Identify results using frame numbers
 ```{r}
-# combines the results from the different analysis based on the column numbers 
+# combine the results from the different analysis based on the column numbers 
 # (ID from MountainsMAp)
 frames <- as.numeric(unlist(imp_data[1, data_keep_col]))
 ID <- which(frames == 6)[-(1:2)]
@@ -116,7 +113,7 @@ SSFA <- which(frames %in% 21:22)
 
 ## Shorten the names for parameters
 ```{r}
-# keeps only the important information of the headers 
+# keep only the important information of the headers 
 colnames(data_keep)[ISO] <- sapply(strsplit(names(data_keep)[ISO], ".", fixed = TRUE), 
                             `[[`, 1)
 colnames(data_keep)[SSFA] <- gsub("^([A-Za-z0-9]+\\.)+", "", colnames(data_keep)[SSFA])
@@ -126,13 +123,13 @@ colnames(data_keep)[SSFA] <- gsub("^([A-Za-z0-9]+\\.)+", "", colnames(data_keep)
 
 ## Save units
 ```{r}
-# takes the units which were part of the headers and separates them; creates a data frame
+# take the units which were part of the headers and separate them; create a data frame
 var_num <- c(ID, ISO, furrow, diriso, SSFA)
-# extracts 'unit' line for considered columns
+# extract 'unit' line for considered columns
 units_var <- unlist(imp_data[3, data_keep_col])[var_num] 
-# gets names associated to the units
+# get names associated to the units
 names(units_var) <- head_data_keep[var_num] 
-# puts all of it into a data.frame
+# put all of it into a data.frame
 units_var_table <- data.frame(variable = names(units_var), unit = units_var) 
 
 ```
@@ -153,7 +150,7 @@ stud_name <- gsub("([A-Za-z0-9_-]*( - ))+", "", stud_name)
 split_name <- do.call(rbind, strsplit(stud_name, "_"))[, 1:4]
 split_loc <- do.call(rbind, strsplit(split_name[, 3], "-"))
 
-# splits the ID in the separat information 
+# split the ID in the separate information 
 data_final <- data.frame(split_name[, -3], split_loc, data_keep[-3], 
                          stringsAsFactors = FALSE)
 colnames(data_final)[1:9] <- c("Sample", "Cycle","Objective", "Location", "Area", "Spot",
@@ -175,17 +172,17 @@ left as `character` without convertion to `POSIXct`.
 
 ## Add columns about site, contact material, the task and the edge angle
 ```{r}
-# extracts the raw material based on the ID
+# extract the raw material based on the ID
 data_final[grep("FLT8-", data_final[["Sample"]]), "Raw.material"] <- "flint"
 data_final[grep("LYDIT5-", data_final[["Sample"]]), "Raw.material"] <- "lydite"
 data_final[["Raw.material"]] <- factor(data_final[["Raw.material"]])
 
-# adds column about the contact material
+# add column about the contact material
 data_final[grep("LYDIT5-", data_final[["Sample"]]), "Contact.material"] <- "bone plate"
 data_final[grep("FLT8-", data_final[["Sample"]]), "Contact.material"] <- "bone plate"
 data_final[["Contact.material"]] <- factor(data_final[["Contact.material"]])
 
-# adds column about the task/movement 
+# add column about the task/movement 
 data_final[grep("FLT8-2", data_final[["Sample"]]), "Task"] <- "cutting"
 data_final[grep("LYDIT5-2", data_final[["Sample"]]), "Task"] <- "cutting"
 data_final[grep("FLT8-5", data_final[["Sample"]]), "Task"] <- "cutting"
@@ -197,7 +194,7 @@ data_final[grep("FLT8-9", data_final[["Sample"]]), "Task"] <- "carving"
 data_final[grep("LYDIT5-12", data_final[["Sample"]]), "Task"] <- "carving"
 data_final[["Task"]] <- factor(data_final[["Task"]])
 
-# adds column about the edge angle 
+# add column about the edge angle 
 data_final[grep("FLT8-2", data_final[["Sample"]]), "Edge.angle"] <- "45°"
 data_final[grep("LYDIT5-2", data_final[["Sample"]]), "Edge.angle"] <- "45°"
 data_final[grep("FLT8-5", data_final[["Sample"]]), "Edge.angle"] <- "35°"
@@ -273,6 +270,12 @@ sessionInfo()
 ```
 
 RStudio version `r readLines("analysis/scripts/RStudioVersion.txt", n = 1)`.
+
+
+# Cite R packages used
+```{r Citation}
+for (i in pack_to_load) print(citation(i), bibtex = FALSE)
+```
 
 
 ---
